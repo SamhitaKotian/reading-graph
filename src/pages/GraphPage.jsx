@@ -1,0 +1,291 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import BookGraph from '../BookGraph';
+import FilterSidebar from '../FilterSidebar';
+
+function GraphPage() {
+  const [books, setBooks] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    all: true,
+    topRated: false,
+    last20: false,
+    fiction: false,
+    selfHelp: false,
+    memoirs: false
+  });
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Load books from navigation state or localStorage on mount
+  useEffect(() => {
+    // First try to get books from navigation state
+    if (location.state?.books && location.state.books.length > 0) {
+      setBooks(location.state.books);
+      // Also save to localStorage for persistence
+      localStorage.setItem('readingGraphBooks', JSON.stringify(location.state.books));
+    } else {
+      // Fallback to localStorage
+      const savedBooks = localStorage.getItem('readingGraphBooks');
+      if (savedBooks) {
+        try {
+          const parsedBooks = JSON.parse(savedBooks);
+          setBooks(parsedBooks);
+        } catch (error) {
+          console.error('Error loading books from localStorage:', error);
+        }
+      }
+    }
+  }, [location.state]);
+
+  // Parse date string to Date object for sorting
+  const parseDate = (dateString) => {
+    if (!dateString || dateString.trim() === '') return new Date(0);
+    
+    try {
+      let date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        const parts = dateString.split('/');
+        if (parts.length >= 2) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
+          date = new Date(year, month, day);
+        } else {
+          const dashParts = dateString.split('-');
+          if (dashParts.length >= 2) {
+            const year = parseInt(dashParts[0], 10);
+            const month = parseInt(dashParts[1], 10) - 1;
+            const day = dashParts.length > 2 ? parseInt(dashParts[2], 10) : 1;
+            date = new Date(year, month, day);
+          }
+        }
+      }
+      
+      return isNaN(date.getTime()) ? new Date(0) : date;
+    } catch {
+      return new Date(0);
+    }
+  };
+
+  // Check if book belongs to a genre based on bookshelves or exclusiveShelf
+  const hasGenre = (book, genreKeywords) => {
+    if (!book) return false;
+    
+    const bookshelves = (book.bookshelves || '').toLowerCase();
+    const exclusiveShelf = (book.exclusiveShelf || '').toLowerCase();
+    const combined = `${bookshelves} ${exclusiveShelf}`;
+    
+    return genreKeywords.some(keyword => 
+      combined.includes(keyword.toLowerCase())
+    );
+  };
+
+  // Filter books based on active filters
+  const filterBooks = (booksList, filters) => {
+    if (!booksList || booksList.length === 0) {
+      return [];
+    }
+
+    let filtered = [...booksList];
+
+    // If 'all' is true, return all books
+    if (filters.all) {
+      return filtered;
+    }
+
+    // Apply top rated filter
+    if (filters.topRated) {
+      filtered = filtered.filter(book => {
+        const rating = parseFloat(book.rating) || 0;
+        return rating >= 4;
+      });
+    }
+
+    // Apply last 20 filter - sort by Date Read
+    if (filters.last20) {
+      filtered.sort((a, b) => {
+        const dateA = parseDate(a.dateRead);
+        const dateB = parseDate(b.dateRead);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      filtered = filtered.slice(0, 20);
+    }
+
+    // Apply genre filters
+    if (filters.fiction) {
+      filtered = filtered.filter(book => 
+        hasGenre(book, ['fiction', 'novel', 'literary fiction', 'contemporary fiction'])
+      );
+    }
+
+    if (filters.selfHelp) {
+      filtered = filtered.filter(book => 
+        hasGenre(book, ['self-help', 'self help', 'non-fiction', 'nonfiction', 'personal development', 'psychology', 'business'])
+      );
+    }
+
+    if (filters.memoirs) {
+      filtered = filtered.filter(book => 
+        hasGenre(book, ['memoir', 'memoirs', 'autobiography', 'biography'])
+      );
+    }
+
+    return filtered;
+  };
+
+  // Calculate filtered books based on active filters
+  const filteredBooks = useMemo(() => {
+    return filterBooks(books, activeFilters);
+  }, [books, activeFilters]);
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0e27' }}>
+      {/* Header */}
+      <div className="border-b px-6 py-6 md:px-8 md:py-8" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+        <div className="container mx-auto flex items-center justify-between">
+          <h1 
+            className="text-3xl font-bold mb-4 tracking-wide" 
+            style={{ 
+              color: '#ffffff',
+              textShadow: '0 0 20px rgba(147, 51, 234, 0.4)'
+            }}
+          >
+            Book Network Graph
+          </h1>
+          <button
+            onClick={() => navigate('/')}
+            className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+            style={{ 
+              backgroundColor: '#9333ea',
+              color: '#ffffff',
+              boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            Back to Upload
+          </button>
+        </div>
+      </div>
+
+      {/* Main content area with sidebar and graph */}
+      {books.length > 0 ? (
+        <div className="flex flex-1 overflow-hidden relative min-h-0">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden fixed top-20 left-4 z-50 p-2 rounded-lg transition-all duration-300"
+            style={{ 
+              backgroundColor: 'rgba(147, 51, 234, 0.8)',
+              color: '#ffffff',
+              boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.7)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.5)';
+            }}
+            aria-label="Toggle filters"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {sidebarOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+
+          {/* Mobile overlay */}
+          {sidebarOpen && (
+            <div
+              className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+
+          {/* Filter Sidebar */}
+          <div
+            className={`
+              absolute md:relative
+              h-full flex-shrink-0 z-40
+              transform transition-transform duration-300 ease-in-out
+              ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}
+            style={{ width: '250px' }}
+          >
+            <FilterSidebar
+              filteredBooks={filteredBooks}
+              onFilterChange={setActiveFilters}
+              activeFilters={activeFilters}
+              onClose={() => setSidebarOpen(false)}
+            />
+          </div>
+
+          {/* Graph area */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex-1 flex flex-col p-4 min-h-0">
+              <div className="flex-1 min-h-0">
+                <BookGraph books={filteredBooks} />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-lg mb-4 leading-relaxed" style={{ color: '#d1d5db' }}>
+              No books found. Please upload books first.
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              style={{ 
+                backgroundColor: '#9333ea',
+                color: '#ffffff',
+                boxShadow: '0 0 20px rgba(147, 51, 234, 0.5)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.boxShadow = '0 0 30px rgba(147, 51, 234, 0.7)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.5)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              Go to Upload Page
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default GraphPage;

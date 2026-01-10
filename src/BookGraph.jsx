@@ -10,18 +10,33 @@ function BookGraph({ books = [] }) {
     }
     return 1200; // Fallback for SSR
   });
+  const [graphHeight, setGraphHeight] = useState(600);
 
-  // Handle window resize to update width
+  // Handle window resize to update width and height
   useEffect(() => {
-    const updateWidth = () => {
-      setGraphWidth(window.innerWidth);
+    const updateSize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setGraphWidth(rect.width);
+        setGraphHeight(rect.height || 600);
+      } else {
+        setGraphWidth(window.innerWidth);
+        setGraphHeight(600);
+      }
     };
 
-    // Set initial width
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
+    // Set initial size after a short delay to ensure container is rendered
+    const timer = setTimeout(updateSize, 100);
+    window.addEventListener('resize', updateSize);
+    
+    // Also update when books change (container might resize)
+    updateSize();
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateSize);
+    };
+  }, [books]);
 
   // Generate graph data from books
   const graphData = useMemo(() => {
@@ -113,13 +128,14 @@ function BookGraph({ books = [] }) {
   if (!books || books.length === 0) {
     return (
       <div 
-        className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600"
+        className="flex items-center justify-center rounded-lg border-2 border-dashed"
         style={{ 
           height: '600px', 
           backgroundColor: '#0a0e27',
+          borderColor: 'rgba(255, 255, 255, 0.2)'
         }}
       >
-        <p className="text-gray-400 text-lg">
+        <p style={{ color: '#9ca3af' }} className="text-lg">
           Upload books to see the graph visualization
         </p>
       </div>
@@ -129,8 +145,8 @@ function BookGraph({ books = [] }) {
   return (
     <div 
       ref={containerRef}
-      className="w-full rounded-lg overflow-hidden shadow-2xl relative" 
-      style={{ backgroundColor: '#0a0e27', minHeight: '600px' }}
+      className="w-full h-full rounded-lg overflow-hidden shadow-2xl relative" 
+      style={{ backgroundColor: '#0a0e27' }}
     >
       {isLoading && (
         <div 
@@ -201,7 +217,7 @@ function BookGraph({ books = [] }) {
         nodeCanvasObjectMode={() => 'replace'}
         backgroundColor="#0a0e27"
         width={graphWidth}
-        height={600}
+        height={graphHeight || 600}
         nodeRelSize={6}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.4}
