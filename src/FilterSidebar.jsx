@@ -54,16 +54,16 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
         borderRight: '1px solid rgba(255, 255, 255, 0.1)',
       }}
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-white tracking-wide" style={{ color: '#ffffff' }}>
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 lg:space-y-8">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-base md:text-lg lg:text-xl font-semibold text-white tracking-wide" style={{ color: '#ffffff' }}>
             Filters
           </h2>
           {/* Mobile close button */}
           {onClose && (
             <button
               onClick={onClose}
-              className="px-3 py-1.5 md:hidden text-gray-400 hover:text-white transition-colors"
+              className="min-h-[44px] min-w-[44px] px-3 py-2 md:hidden text-gray-400 hover:text-white transition-colors flex items-center justify-center"
               aria-label="Close filters"
             >
               <svg
@@ -83,19 +83,19 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
         {/* All Books */}
         <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.all === true}
             onChange={(e) => handleFilterChange('all', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
+            className="w-5 h-5 md:w-4 md:h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
+          <label className="text-sm md:text-base text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer min-h-[44px] flex items-center">
             All Books
           </label>
         </div>
@@ -106,12 +106,12 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
             type="checkbox"
             checked={activeFilters.topRated || false}
             onChange={(e) => handleFilterChange('topRated', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
+            className="w-5 h-5 md:w-4 md:h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
+          <label className="text-sm md:text-base text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer min-h-[44px] flex items-center">
             Top Rated (4-5 stars)
           </label>
         </div>
@@ -122,12 +122,12 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
             type="checkbox"
             checked={activeFilters.last20 || false}
             onChange={(e) => handleFilterChange('last20', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
+            className="w-5 h-5 md:w-4 md:h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
+          <label className="text-sm md:text-base text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer min-h-[44px] flex items-center">
             Last 20 Read
           </label>
         </div>
@@ -138,12 +138,12 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
             type="checkbox"
             checked={activeFilters.fiction || false}
             onChange={(e) => handleFilterChange('fiction', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
+            className="w-5 h-5 md:w-4 md:h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
+          <label className="text-sm md:text-base text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer min-h-[44px] flex items-center">
             Fiction
           </label>
         </div>
@@ -154,12 +154,12 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
             type="checkbox"
             checked={activeFilters.selfHelp || false}
             onChange={(e) => handleFilterChange('selfHelp', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
+            className="w-5 h-5 md:w-4 md:h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
+          <label className="text-sm md:text-base text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer min-h-[44px] flex items-center">
             Self-Help/Non-Fiction
           </label>
         </div>
@@ -170,12 +170,12 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
             type="checkbox"
             checked={activeFilters.memoirs || false}
             onChange={(e) => handleFilterChange('memoirs', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
+            className="w-5 h-5 md:w-4 md:h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
+          <label className="text-sm md:text-base text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer min-h-[44px] flex items-center">
             Memoirs
           </label>
         </div>
@@ -191,11 +191,11 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
         }}
       >
         <div className="space-y-2 leading-normal">
-          <div className="text-xs text-gray-400">
+          <div className="text-xs md:text-sm text-gray-400">
             <span className="text-gray-500">Total books:</span>{' '}
             <span className="text-gray-300 font-medium">{filteredBooks.length}</span>
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs md:text-sm text-gray-400">
             <span className="text-gray-500">Total connections:</span>{' '}
             <span className="text-gray-300 font-medium">{totalConnections}</span>
           </div>

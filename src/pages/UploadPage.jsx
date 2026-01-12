@@ -230,7 +230,7 @@ function UploadPage() {
       >
         {number}
       </div>
-      <span className="py-3 leading-relaxed" style={{ color: '#9ca3af', fontSize: '16px' }}>
+      <span className="py-3 leading-relaxed text-sm md:text-base" style={{ color: '#9ca3af' }}>
         {text}
       </span>
     </div>
@@ -254,11 +254,11 @@ function UploadPage() {
         onDrop={handleDrop}
       >
         {/* Navigation Bar */}
-        <div className="border-b px-6 py-4 md:px-8 md:py-6" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+        <div className="border-b px-4 py-4 md:px-6 md:py-6 lg:px-8 lg:py-6" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
           <div className="container mx-auto flex items-center justify-end">
             <button
               onClick={() => navigate('/bookmarks')}
-              className="px-3 py-1.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-3"
+              className="min-h-[44px] px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 md:gap-3 text-sm md:text-base"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
@@ -316,9 +316,9 @@ function UploadPage() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
+        <div className="flex-1 flex items-center justify-center px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-12 relative z-10">
         {/* MAIN CONTENT WRAPPER */}
-        <div className="w-full max-w-6xl mx-auto py-12">
+        <div className="w-full max-w-6xl mx-auto py-8 md:py-12">
           
           {/* Icon */}
           <div className="flex justify-center">
@@ -359,7 +359,7 @@ function UploadPage() {
           {/* Title */}
           <div className="text-center">
             <h1 
-              className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-wide bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-3"
+              className="text-2xl md:text-4xl lg:text-6xl xl:text-7xl font-bold tracking-wide bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-3"
               style={{ 
                 backgroundSize: '200% 200%',
                 animation: 'gradientShift 3s ease infinite',
@@ -369,7 +369,7 @@ function UploadPage() {
               Your Reading Universe
             </h1>
             <p 
-              className="text-lg md:text-xl lg:text-2xl text-gray-400 leading-relaxed mb-10"
+              className="text-sm md:text-base lg:text-xl xl:text-2xl text-gray-400 leading-relaxed mb-6 md:mb-10"
               style={{ textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)' }}
             >
               Discover the hidden connections in your library
@@ -377,7 +377,7 @@ function UploadPage() {
           </div>
 
           {/* Steps */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-10 lg:gap-12 mt-12">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 lg:gap-10 xl:gap-12 mt-8 md:mt-12">
             <Step number="1" text="Export your Goodreads library" />
             <svg 
               className="w-6 h-6 hidden md:block"
@@ -406,7 +406,7 @@ function UploadPage() {
             <div className="w-full max-w-2xl">
               {!isLoading && (
                 <div 
-                  className="bg-blue-900/20 backdrop-blur-lg rounded-2xl border border-blue-800/30 p-12 md:p-20 w-full relative z-10 cursor-pointer transition-all duration-500"
+                  className="bg-blue-900/20 backdrop-blur-lg rounded-2xl border border-blue-800/30 p-6 md:p-12 lg:p-20 w-full relative z-10 cursor-pointer transition-all duration-500"
                   onClick={handleClick}
                   style={{
                     backgroundColor: isDragging 
@@ -467,7 +467,7 @@ function UploadPage() {
 
                   {/* Drag drop text */}
                   <h2 
-                    className="text-2xl md:text-3xl font-semibold text-center mb-6 py-2 transition-colors duration-300 tracking-wide leading-relaxed"
+                    className="text-xl md:text-2xl lg:text-3xl font-semibold text-center mb-4 md:mb-6 py-2 transition-colors duration-300 tracking-wide leading-relaxed"
                     style={{ 
                       color: isDragging ? '#9333ea' : '#ffffff',
                       textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
@@ -478,7 +478,7 @@ function UploadPage() {
 
                   {/* Or text */}
                   <p 
-                    className="text-gray-400 text-center mb-10 py-1 transition-colors duration-300 leading-normal"
+                    className="text-sm md:text-base text-gray-400 text-center mb-6 md:mb-10 py-1 transition-colors duration-300 leading-normal"
                     style={{ color: isDragging ? '#d1d5db' : '#9ca3af' }}
                   >
                     or click to browse
@@ -487,7 +487,7 @@ function UploadPage() {
                   {/* Button */}
                   <div className="flex justify-center">
                     <button
-                      className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-lg transition-all duration-300 relative overflow-hidden group"
+                      className="min-h-[44px] px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-sm md:text-base lg:text-lg transition-all duration-300 relative overflow-hidden group"
                       style={{
                         color: '#ffffff',
                         boxShadow: '0 0 30px rgba(147, 51, 234, 0.5)'
@@ -521,7 +521,7 @@ function UploadPage() {
           {error && (
             <div className="flex justify-center px-4">
               <div 
-                className="p-4 rounded-xl text-center backdrop-blur-sm leading-relaxed mb-6"
+                className="p-4 rounded-xl text-center backdrop-blur-sm leading-relaxed mb-6 text-sm md:text-base"
                 style={{
                   backgroundColor: 'rgba(220, 38, 38, 0.1)',
                   border: '1px solid rgba(220, 38, 38, 0.3)',

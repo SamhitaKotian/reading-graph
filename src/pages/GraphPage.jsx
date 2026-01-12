@@ -164,110 +164,113 @@ function GraphPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0e27' }}>
       {/* Header */}
-      <div className="border-b px-6 py-6 md:px-8 md:py-8" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-        <div className="container mx-auto flex items-center justify-between">
+      <div className="border-b md:px-6 md:py-6 lg:px-8 lg:py-8" style={{ borderColor: 'rgba(255, 255, 255, 0.1)', padding: '24px' }}>
+        <div className="container mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
           <h1 
-            className="text-3xl font-bold mb-4 tracking-wide" 
+            className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide" 
             style={{ 
               color: '#ffffff',
               textShadow: '0 0 20px rgba(147, 51, 234, 0.4)'
             }}
           >
-            Book Network Graph
+            A Novel Universe
           </h1>
-          <div className="flex gap-5">
+          <div className="flex items-center gap-2 md:gap-5 w-full md:w-auto justify-between md:justify-end">
+            {/* Mobile menu button - moved here */}
             <button
-              onClick={() => navigate('/bookmarks')}
-              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-3"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg transition-all duration-300 flex items-center justify-center"
               style={{ 
-                backgroundColor: '#9333ea',
+                backgroundColor: 'rgba(147, 51, 234, 0.8)',
                 color: '#ffffff',
-                boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+                boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)'
               }}
               onMouseEnter={(e) => {
-                e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
-                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.7)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
-                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.5)';
               }}
+              aria-label="Toggle filters"
             >
               <svg
-                className="w-5 h-5"
-                fill="currentColor"
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                {sidebarOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
               </svg>
-              Bookmarks
             </button>
-            <button
-              onClick={() => navigate('/')}
-              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
-              style={{ 
-                backgroundColor: '#9333ea',
-                color: '#ffffff',
-                boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              Back to Upload
-            </button>
+            <div className="flex items-center gap-2 md:gap-5">
+              <button
+                onClick={() => navigate('/bookmarks')}
+                className="min-h-[44px] px-3 md:px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+                style={{ 
+                  backgroundColor: '#9333ea',
+                  color: '#ffffff',
+                  boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                <span className="hidden sm:inline">Bookmarks</span>
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="min-h-[44px] px-3 md:px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm md:text-base"
+                style={{ 
+                  backgroundColor: '#9333ea',
+                  color: '#ffffff',
+                  boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <span className="md:hidden">Back</span>
+                <span className="hidden md:inline">Back to Upload</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main content area with sidebar and graph */}
       {books.length > 0 ? (
-        <div className="flex flex-1 overflow-hidden relative min-h-0">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden fixed top-20 left-4 z-50 px-3 py-1.5 rounded-lg transition-all duration-300"
-            style={{ 
-              backgroundColor: 'rgba(147, 51, 234, 0.8)',
-              color: '#ffffff',
-              boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.7)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.5)';
-            }}
-            aria-label="Toggle filters"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {sidebarOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
+        <div className="flex flex-1 overflow-hidden relative min-h-0" style={{ padding: '24px' }}>
 
           {/* Mobile overlay */}
           {sidebarOpen && (
@@ -284,8 +287,8 @@ function GraphPage() {
               h-full flex-shrink-0 z-40
               transform transition-transform duration-300 ease-in-out
               ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+              w-64 md:w-64 lg:w-72
             `}
-            style={{ width: '250px' }}
           >
             <FilterSidebar
               filteredBooks={filteredBooks}
@@ -301,7 +304,7 @@ function GraphPage() {
             {(isNodeSelected || quotesPanelOpen) && (
               <button
                 onClick={handleReset}
-                className="absolute top-4 left-4 z-50 px-3 py-1.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-3"
+                className="absolute top-4 left-4 z-50 min-h-[44px] px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 md:gap-3 text-sm md:text-base"
                 style={{ 
                   backgroundColor: 'rgba(147, 51, 234, 0.9)',
                   color: '#ffffff',
@@ -323,8 +326,8 @@ function GraphPage() {
                 Reset View
               </button>
             )}
-            <div className="flex-1 flex flex-col p-4 min-h-0">
-              <div className="flex-1 min-h-0">
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 min-h-0 w-full h-full">
                 <BookGraph 
                   books={filteredBooks} 
                   onReset={() => {
@@ -342,14 +345,14 @@ function GraphPage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center py-12">
-          <div className="text-center space-y-8">
-            <p className="text-lg mb-4 leading-relaxed" style={{ color: '#d1d5db' }}>
+        <div className="flex-1 flex items-center justify-center" style={{ padding: '24px' }}>
+          <div className="text-center space-y-4 md:space-y-6 lg:space-y-8">
+            <p className="text-sm md:text-base lg:text-lg mb-4 leading-relaxed" style={{ color: '#d1d5db' }}>
               No books found. Please upload books first.
             </p>
             <button
               onClick={() => navigate('/')}
-              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              className="min-h-[44px] px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm md:text-base"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',

@@ -70,7 +70,7 @@ function LoadingScreen({ bookCount = 0, onComplete, analysisProgress = 0, isAnal
             textShadow: '0 0 20px rgba(147, 51, 234, 0.5)'
           }}
         >
-          Discovering connections in your reading{dots}
+          Discovering connections in your reading
         </h2>
 
         {/* Progress text */}

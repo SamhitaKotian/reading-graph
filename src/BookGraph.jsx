@@ -392,7 +392,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
           borderColor: 'rgba(255, 255, 255, 0.2)'
         }}
       >
-        <p style={{ color: '#9ca3af' }} className="text-lg">
+        <p style={{ color: '#9ca3af' }} className="text-sm md:text-base lg:text-lg px-4">
           Upload books to see the graph visualization
         </p>
       </div>
@@ -402,7 +402,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
   return (
     <div 
       ref={containerRef}
-      className="w-full h-full rounded-lg overflow-hidden shadow-2xl relative" 
+      className="w-full h-screen md:h-full rounded-lg overflow-hidden shadow-2xl relative touch-action-pan" 
       style={{ 
         background: 'linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0a0e27 100%)',
         minHeight: '600px', 
@@ -429,21 +429,42 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
         nodeColor={getNodeColor}
         nodeVal={(node) => 4}
         linkColor={() => '#00ffff'}
-        linkWidth={0.8}
-        linkDirectionalArrowLength={6}
-        linkDirectionalArrowRelPos={1}
+        linkWidth={(link) => {
+          const distance = Math.hypot(
+            link.target.x - link.source.x,
+            link.target.y - link.source.y
+          );
+          return distance > 150 ? 1.2 : 0.8; // Thicker when stretched
+        }}
+        linkCurvature={0.25}
+        linkDirectionalArrowLength={0}
         linkDirectionalParticles={1}
         linkDirectionalParticleWidth={1.5}
-        linkDirectionalParticleSpeed={0.003}
+        linkDirectionalParticleSpeed={(link) => {
+          const distance = Math.hypot(
+            link.target.x - link.source.x,
+            link.target.y - link.source.y
+          );
+          return distance > 150 ? 0.005 : 0.002;
+        }}
         linkDirectionalParticleColor={() => 'rgba(0,255,255,0.5)'}
         linkCanvasObjectMode={() => 'replace'}
         linkCanvasObject={(link, ctx, globalScale) => {
           const start = link.source;
           const end = link.target;
           
-          // Outer glow (subtle)
-          ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
-          ctx.lineWidth = 3 / globalScale;
+          // Calculate distance for dynamic styling
+          const distance = Math.hypot(end.x - start.x, end.y - start.y);
+          const isStretched = distance > 150;
+          const isFar = distance > 200;
+          
+          // Dynamic width based on stretch
+          const baseWidth = isStretched ? 1.2 : 0.8;
+          const opacity = isFar ? 0.4 : 0.7;
+          
+          // Outer glow (subtle) - with dynamic opacity
+          ctx.strokeStyle = `rgba(0, 255, 255, ${0.15 * opacity / 0.7})`;
+          ctx.lineWidth = (3 * baseWidth / 0.8) / globalScale;
           ctx.shadowBlur = 10;
           ctx.shadowColor = '#00ffff';
           ctx.beginPath();
@@ -451,9 +472,9 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
           ctx.lineTo(end.x, end.y);
           ctx.stroke();
           
-          // Core line (bright, thin)
-          ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
-          ctx.lineWidth = 0.8 / globalScale;
+          // Core line (bright, thin) - with dynamic width and opacity
+          ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 * opacity / 0.7})`;
+          ctx.lineWidth = baseWidth / globalScale;
           ctx.shadowBlur = 5;
           ctx.beginPath();
           ctx.moveTo(start.x, start.y);
@@ -462,9 +483,15 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
           
           ctx.shadowBlur = 0;
         }}
-        cooldownTicks={200}
-        warmupTicks={100}
-        linkOpacity={0.6}
+        cooldownTicks={150}
+        warmupTicks={50}
+        linkOpacity={(link) => {
+          const distance = Math.hypot(
+            link.target.x - link.source.x,
+            link.target.y - link.source.y
+          );
+          return distance > 200 ? 0.4 : 0.7; // Fade when far
+        }}
         onEngineStop={() => {
           // Graph has finished initializing
           setIsLoading(false);
@@ -473,6 +500,10 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
           setHoveredNode(node);
         }}
         onNodeClick={handleNodeClick}
+        onNodeDragEnd={(node) => {
+          node.fx = null;
+          node.fy = null;
+        }}
         nodePointerAreaPaint={(node, color, ctx) => {
           ctx.fillStyle = color;
           ctx.beginPath();
@@ -532,12 +563,15 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
         nodeRelSize={4}
         nodeRepulsion={-400}
         linkDistance={120}
-        d3AlphaDecay={0.02}
-        d3AlphaMin={0.001}
-        d3VelocityDecay={0.3}
+        d3AlphaDecay={0.0001}
+        d3AlphaMin={0.0001}
+        d3VelocityDecay={0.1}
         d3Force={{
-          charge: { strength: -500 },
-          link: { distance: 120 }
+          charge: { strength: -350 },
+          link: { 
+            distance: 120,
+            strength: 0.3
+          }
         }}
       />
       <QuotesPanel 
