@@ -219,7 +219,7 @@ function UploadPage() {
 
   // Step Component
   const Step = ({ number, text }) => (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-3">
       <div 
         className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg p-3"
         style={{
@@ -258,7 +258,7 @@ function UploadPage() {
           <div className="container mx-auto flex items-center justify-end">
             <button
               onClick={() => navigate('/bookmarks')}
-              className="px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+              className="px-3 py-1.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-3"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
@@ -318,7 +318,7 @@ function UploadPage() {
         {/* Main Content */}
         <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
         {/* MAIN CONTENT WRAPPER */}
-        <div className="w-full max-w-6xl mx-auto space-y-20 md:space-y-28">
+        <div className="w-full max-w-6xl mx-auto py-12">
           
           {/* Icon */}
           <div className="flex justify-center">
@@ -357,9 +357,9 @@ function UploadPage() {
           </div>
 
           {/* Title */}
-          <div className="text-center space-y-6">
+          <div className="text-center">
             <h1 
-              className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-wide bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-wide bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-3"
               style={{ 
                 backgroundSize: '200% 200%',
                 animation: 'gradientShift 3s ease infinite',
@@ -369,7 +369,7 @@ function UploadPage() {
               Your Reading Universe
             </h1>
             <p 
-              className="text-lg md:text-xl lg:text-2xl text-gray-400 leading-relaxed"
+              className="text-lg md:text-xl lg:text-2xl text-gray-400 leading-relaxed mb-10"
               style={{ textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)' }}
             >
               Discover the hidden connections in your library
@@ -377,7 +377,7 @@ function UploadPage() {
           </div>
 
           {/* Steps */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 lg:gap-12">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-10 lg:gap-12 mt-12">
             <Step number="1" text="Export your Goodreads library" />
             <svg 
               className="w-6 h-6 hidden md:block"
@@ -402,7 +402,7 @@ function UploadPage() {
           </div>
 
           {/* Upload Card */}
-          <div className="flex justify-center px-4">
+          <div className="flex justify-center px-4 mt-12">
             <div className="w-full max-w-2xl">
               {!isLoading && (
                 <div 
@@ -467,7 +467,7 @@ function UploadPage() {
 
                   {/* Drag drop text */}
                   <h2 
-                    className="text-2xl md:text-3xl font-semibold text-center mb-6 py-2 transition-colors duration-300 tracking-wide"
+                    className="text-2xl md:text-3xl font-semibold text-center mb-6 py-2 transition-colors duration-300 tracking-wide leading-relaxed"
                     style={{ 
                       color: isDragging ? '#9333ea' : '#ffffff',
                       textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
@@ -478,7 +478,7 @@ function UploadPage() {
 
                   {/* Or text */}
                   <p 
-                    className="text-gray-400 text-center mb-10 py-1 transition-colors duration-300 leading-relaxed"
+                    className="text-gray-400 text-center mb-10 py-1 transition-colors duration-300 leading-normal"
                     style={{ color: isDragging ? '#d1d5db' : '#9ca3af' }}
                   >
                     or click to browse
@@ -487,7 +487,7 @@ function UploadPage() {
                   {/* Button */}
                   <div className="flex justify-center">
                     <button
-                      className="px-10 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-lg transition-all duration-300 relative overflow-hidden group"
+                      className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-lg transition-all duration-300 relative overflow-hidden group"
                       style={{
                         color: '#ffffff',
                         boxShadow: '0 0 30px rgba(147, 51, 234, 0.5)'
@@ -521,7 +521,7 @@ function UploadPage() {
           {error && (
             <div className="flex justify-center px-4">
               <div 
-                className="p-4 rounded-xl text-center backdrop-blur-sm leading-relaxed"
+                className="p-4 rounded-xl text-center backdrop-blur-sm leading-relaxed mb-6"
                 style={{
                   backgroundColor: 'rgba(220, 38, 38, 0.1)',
                   border: '1px solid rgba(220, 38, 38, 0.3)',

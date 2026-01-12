@@ -118,10 +118,11 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
 
       {/* Panel */}
       <div
-        className="fixed right-0 top-0 h-full w-full md:w-96 backdrop-blur-lg bg-gray-900/80 border-l border-purple-500/30 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto"
+        className="fixed right-0 top-0 h-full w-full md:w-96 backdrop-blur-lg bg-gray-900/80 border-l border-purple-500/30 shadow-2xl z-50 transform transition-all duration-500 ease-out overflow-y-auto"
         style={{
           transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          boxShadow: '0 0 40px rgba(147, 51, 234, 0.3)',
+          opacity: isOpen ? 1 : 0,
+          boxShadow: isOpen ? '0 0 40px rgba(147, 51, 234, 0.3)' : '0 0 0px rgba(147, 51, 234, 0)',
         }}
       >
         {/* Header */}
@@ -130,7 +131,7 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
             <h2 className="text-xl font-bold text-white">Book Quotes</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-purple-500/20 rounded-lg"
+              className="px-3 py-1.5 text-gray-400 hover:text-white transition-colors hover:bg-purple-500/20 rounded-lg"
               aria-label="Close panel"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,12 +152,12 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
             <div className="space-y-2">
               <h3 className="text-2xl font-bold text-white leading-tight">{book.title}</h3>
               {book.author && (
-                <p className="text-purple-300 text-sm">by {book.author}</p>
+                <p className="text-purple-300 text-sm leading-normal">by {book.author}</p>
               )}
               {book.rating && (
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-400 text-sm">★</span>
-                  <span className="text-gray-300 text-sm">{book.rating}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-yellow-400 text-sm leading-normal">★</span>
+                  <span className="text-gray-300 text-sm leading-normal">{book.rating}</span>
                 </div>
               )}
             </div>
@@ -166,17 +167,18 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
         {/* Content */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-gray-400">Loading quotes...</p>
+            <p className="text-gray-400 leading-relaxed">Loading quotes...</p>
           </div>
         ) : !book ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-gray-400">No book selected</p>
+            <p className="text-gray-400 leading-relaxed">No book selected</p>
           </div>
         ) : (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-8">
+            <div className="space-y-6">
             {themes.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400">No themes or quotes available for this book.</p>
+                <p className="text-gray-400 leading-relaxed">No themes or quotes available for this book.</p>
               </div>
             ) : (
             themes.map((theme, index) => {
@@ -197,7 +199,7 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
                   {/* Theme Header - Clickable */}
                   <button
                     onClick={() => toggleTheme(themeName)}
-                    className="w-full px-4 py-4 flex items-center justify-between hover:bg-purple-500/10 transition-colors"
+                    className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-purple-500/10 transition-colors"
                   >
                     <h4 className="text-lg font-semibold text-white text-left">{themeName}</h4>
                     <svg
@@ -212,14 +214,17 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
 
                   {/* Theme Content - Expandable */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 space-y-3 animate-fadeIn">
+                    <div className="px-4 pb-4 space-y-6 animate-fadeIn">
                       {quotes.length === 0 ? (
-                        <p className="text-gray-400 text-sm italic">No quotes available for this theme.</p>
+                        <p className="text-gray-400 text-sm italic leading-normal">No quotes available for this theme.</p>
                       ) : (
                         quotes.map((quote, quoteIndex) => (
                           <div
                             key={quoteIndex}
-                            className="bg-gray-900/50 rounded-lg p-4 border border-purple-500/10 hover:border-purple-500/30 transition-all group"
+                            className="bg-gray-900/50 rounded-lg p-4 border border-purple-500/10 hover:border-purple-500/30 transition-all duration-300 group cursor-pointer transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20"
+                            style={{
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
                           >
                             <div className="flex items-start gap-3">
                               {/* Quote text */}
@@ -229,7 +234,7 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
                               
                               {/* Bookmark icon - filled if bookmarked */}
                               <button
-                                className={`flex-shrink-0 transition-colors p-1 ${
+                                className={`px-3 py-1.5 flex-shrink-0 transition-colors ${
                                   isBookmarked(quote, themeName) 
                                     ? 'text-yellow-400 hover:text-yellow-300' 
                                     : 'text-gray-500 hover:text-purple-400'
@@ -264,16 +269,17 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
               );
             })
             )}
+            </div>
 
             {/* AI Insights Section */}
-            <div className="mt-6 pt-6 border-t border-purple-500/20">
-              <div className="flex items-center justify-between mb-4">
+            <div className="pt-6 border-t border-purple-500/20 space-y-8">
+              <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white">AI Insights</h3>
                 {!insights && (
                   <button
                     onClick={handleGenerateInsights}
                     disabled={isGeneratingInsights || !book}
-                    className="px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 rounded-lg font-medium transition-all duration-300 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ 
                       backgroundColor: '#9333ea',
                       color: '#ffffff',
@@ -308,14 +314,14 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
                 <div className="flex items-center justify-center py-8">
                   <div className="text-center">
                     <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-400 text-sm">Generating insights...</p>
+                    <p className="text-gray-400 text-sm leading-normal">Generating insights...</p>
                   </div>
                 </div>
               )}
 
               {insightsError && (
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
-                  <p className="text-red-400 text-sm">{insightsError}</p>
+                  <p className="text-red-400 text-sm leading-normal">{insightsError}</p>
                 </div>
               )}
 
@@ -323,24 +329,24 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
                 <div className="space-y-6 animate-fadeIn">
                   {/* Book Suggestions */}
                   {insights.suggestions && insights.suggestions.length > 0 && (
-                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-purple-500/20 p-4">
-                      <h4 className="text-md font-semibold text-purple-300 mb-3">Similar Books</h4>
-                      <div className="space-y-3">
+                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg border border-purple-500/20 p-4 space-y-6">
+                      <h4 className="text-md font-semibold text-purple-300 leading-normal">Similar Books</h4>
+                      <div className="space-y-6">
                         {insights.suggestions.map((suggestion, index) => (
                           <div
                             key={index}
                             className="bg-gray-900/50 rounded-lg p-3 border border-purple-500/10 hover:border-purple-500/30 transition-all"
                           >
-                            <div className="flex items-start gap-2">
+                            <div className="flex items-start gap-3">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
                                 New for you
                               </span>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white font-medium text-sm mb-1">
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <p className="text-white font-medium text-sm leading-normal">
                                   {suggestion.title}
                                 </p>
                                 {suggestion.author && (
-                                  <p className="text-purple-300 text-xs">by {suggestion.author}</p>
+                                  <p className="text-purple-300 text-xs leading-normal">by {suggestion.author}</p>
                                 )}
                               </div>
                             </div>
@@ -354,7 +360,7 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
                   <button
                     onClick={handleGenerateInsights}
                     disabled={isGeneratingInsights}
-                    className="w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="w-full px-3 py-1.5 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     style={{ 
                       backgroundColor: 'rgba(147, 51, 234, 0.2)',
                       color: '#9333ea',
@@ -382,7 +388,7 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
         {/* Footer */}
         {!isLoading && book && (
           <div className="sticky bottom-0 backdrop-blur-lg bg-gray-900/80 border-t border-purple-500/30 p-4 text-center">
-            <p className="text-gray-400 text-xs">
+            <p className="text-gray-400 text-xs leading-normal">
               {themes.length} theme{themes.length !== 1 ? 's' : ''} • {allQuotes.length} quote{allQuotes.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -403,6 +409,28 @@ function QuotesPanel({ book, isOpen, onClose, isLoading = false, books = [] }) {
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.05);
+            opacity: 0.9;
+          }
         }
       `}</style>
     </>

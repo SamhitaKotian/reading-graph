@@ -86,6 +86,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
         isRelated,
         isSelected,
         opacity: selectedNode ? (isRelated || isSelected ? 1 : 0.2) : 1,
+        transitionOpacity: true, // Enable opacity transitions
       };
     });
 
@@ -138,6 +139,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
               strength: 0.7 + (sharedThemes.length * 0.1), // Higher strength for more shared themes
               color: themeColors[linkTheme] || '#00CED1',
               isVisible,
+              opacity: isVisible ? 1 : 0, // For fade transitions
             });
           }
         }
@@ -242,7 +244,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
 
     setRelatedNodeIds(relatedIds);
 
-    // Zoom to selected node
+    // Zoom to selected node with smooth transition
     setTimeout(() => {
       if (graphRef.current && node.x !== undefined && node.y !== undefined) {
         graphRef.current.centerAt(node.x, node.y, 800);
@@ -251,7 +253,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
     }, 100);
   };
 
-  // Reset view
+  // Reset view with smooth transition
   const handleReset = () => {
     setSelectedNode(null);
     setRelatedNodeIds(new Set());
@@ -378,7 +380,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
         linkColor={(link) => {
           if (!link.isVisible) return 'rgba(0, 0, 0, 0)'; // Hide non-visible links
           const color = link.color || '#00CED1';
-          const opacity = link.strength || 0.6;
+          const opacity = (link.strength || 0.6) * (link.opacity || 1); // Apply opacity transition
           
           // Convert hex to rgba if needed
           if (color.startsWith('#')) {
@@ -428,6 +430,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
         linkCanvasObjectMode={() => 'replace'}
         cooldownTicks={400}
         warmupTicks={150}
+        linkOpacity={0.6}
         onEngineStop={() => {
           // Graph has finished initializing
           setIsLoading(false);
@@ -497,8 +500,24 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
           ctx.fillStyle = nodeColor;
           ctx.fill();
           
-          // Highlight selected node
+          // Pulse effect for selected node
           if (node.isSelected) {
+            const pulseScale = 1 + Math.sin(pulsePhase * 2) * 0.2; // Faster pulse for selected
+            const pulseRadius = currentRadius * pulseScale;
+            
+            // Pulsing outer ring
+            ctx.save();
+            ctx.globalAlpha = 0.3 * (1 + Math.sin(pulsePhase * 2)) / 2;
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, pulseRadius * 1.5, 0, 2 * Math.PI, false);
+            ctx.stroke();
+            ctx.restore();
+            
+            // Highlight selected node
             ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 3;
             ctx.shadowBlur = 20;

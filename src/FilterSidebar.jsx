@@ -54,16 +54,16 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
         borderRight: '1px solid rgba(255, 255, 255, 0.1)',
       }}
     >
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4 tracking-wide" style={{ color: '#ffffff' }}>
+      <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-white tracking-wide" style={{ color: '#ffffff' }}>
             Filters
           </h2>
           {/* Mobile close button */}
           {onClose && (
             <button
               onClick={onClose}
-              className="md:hidden text-gray-400 hover:text-white transition-colors"
+              className="px-3 py-1.5 md:hidden text-gray-400 hover:text-white transition-colors"
               aria-label="Close filters"
             >
               <svg
@@ -83,114 +83,114 @@ function FilterSidebar({ filteredBooks = [], onFilterChange, activeFilters = {},
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
         {/* All Books */}
-        <label className="flex items-center cursor-pointer group">
+        <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.all === true}
             onChange={(e) => handleFilterChange('all', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <span className="ml-3 text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
             All Books
-          </span>
-        </label>
+          </label>
+        </div>
 
         {/* Top Rated */}
-        <label className="flex items-center cursor-pointer group">
+        <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.topRated || false}
             onChange={(e) => handleFilterChange('topRated', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <span className="ml-3 text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
             Top Rated (4-5 stars)
-          </span>
-        </label>
+          </label>
+        </div>
 
         {/* Last 20 Read */}
-        <label className="flex items-center cursor-pointer group">
+        <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.last20 || false}
             onChange={(e) => handleFilterChange('last20', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <span className="ml-3 text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
             Last 20 Read
-          </span>
-        </label>
+          </label>
+        </div>
 
         {/* Fiction */}
-        <label className="flex items-center cursor-pointer group">
+        <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.fiction || false}
             onChange={(e) => handleFilterChange('fiction', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <span className="ml-3 text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
             Fiction
-          </span>
-        </label>
+          </label>
+        </div>
 
         {/* Self-Help/Non-Fiction */}
-        <label className="flex items-center cursor-pointer group">
+        <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.selfHelp || false}
             onChange={(e) => handleFilterChange('selfHelp', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <span className="ml-3 text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
             Self-Help/Non-Fiction
-          </span>
-        </label>
+          </label>
+        </div>
 
         {/* Memoirs */}
-        <label className="flex items-center cursor-pointer group">
+        <div className="filter-item">
           <input
             type="checkbox"
             checked={activeFilters.memoirs || false}
             onChange={(e) => handleFilterChange('memoirs', e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2"
+            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-2 cursor-pointer"
             style={{
               accentColor: '#9333ea',
             }}
           />
-          <span className="ml-3 text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+          <label className="text-sm text-gray-300 hover:text-white transition-colors leading-normal cursor-pointer">
             Memoirs
-          </span>
-        </label>
+          </label>
+        </div>
         </div>
       </div>
 
       {/* Stats at bottom */}
       <div
-        className="border-t p-6"
+        className="border-t p-6 mb-6"
         style={{
           borderColor: 'rgba(255, 255, 255, 0.1)',
           flexShrink: 0,
         }}
       >
-        <div className="space-y-2 leading-relaxed">
+        <div className="space-y-2 leading-normal">
           <div className="text-xs text-gray-400">
             <span className="text-gray-500">Total books:</span>{' '}
             <span className="text-gray-300 font-medium">{filteredBooks.length}</span>

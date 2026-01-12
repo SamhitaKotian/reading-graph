@@ -21,3 +21,49 @@ html, body {
   background-color: #0a0e27;
   color: #ffffff;
 }
+
+/* Button padding - global override */
+button {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+/* Filter item container */
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Smooth transitions for graph elements */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animation for fade transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Standard button padding utility */
+@layer utilities {
+  .btn-standard {
+    @apply px-3 py-1.5;
+  }
+}

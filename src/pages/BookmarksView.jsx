@@ -68,10 +68,10 @@ function BookmarksView() {
           >
             Bookmarked Quotes
           </h1>
-          <div className="flex gap-4">
+          <div className="flex gap-5">
             <button
               onClick={() => navigate('/graph')}
-              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
@@ -90,7 +90,7 @@ function BookmarksView() {
             </button>
             <button
               onClick={() => navigate('/')}
-              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
@@ -112,10 +112,10 @@ function BookmarksView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-8">
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
         <div className="container mx-auto max-w-4xl">
           {bookGroups.length === 0 ? (
-            <div className="text-center py-20">
+            <div className="text-center py-20 space-y-8">
               <div className="mb-6">
                 <svg
                   className="w-24 h-24 mx-auto text-gray-600"
@@ -131,17 +131,17 @@ function BookmarksView() {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">No bookmarks yet</h2>
-              <p className="text-gray-400 mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2 leading-relaxed">No bookmarks yet</h2>
+              <p className="text-gray-400 mb-6 leading-relaxed">
                 Start bookmarking quotes from your books to see them here
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {bookGroups.map(([bookKey, bookData]) => (
                 <div
                   key={bookKey}
-                  className="bg-gray-900/50 backdrop-blur-sm rounded-lg border border-purple-500/20 overflow-hidden"
+                  className="bg-gray-900/50 backdrop-blur-sm rounded-lg border border-purple-500/20 overflow-hidden mb-6"
                   style={{
                     boxShadow: '0 4px 20px rgba(147, 51, 234, 0.1)'
                   }}
@@ -149,14 +149,14 @@ function BookmarksView() {
                   {/* Book Header */}
                   <div className="px-6 py-4 border-b border-purple-500/20 bg-gray-800/50 flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white">{bookData.title}</h3>
+                      <h3 className="text-xl font-bold text-white leading-relaxed">{bookData.title}</h3>
                       {bookData.author && (
-                        <p className="text-purple-300 text-sm mt-1">by {bookData.author}</p>
+                        <p className="text-purple-300 text-sm mt-1 leading-normal">by {bookData.author}</p>
                       )}
                     </div>
                     <button
                       onClick={() => handleDeleteAllFromBook(bookKey)}
-                      className="px-4 py-2 text-sm rounded-lg font-medium transition-all duration-300 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      className="px-3 py-1.5 text-sm rounded-lg font-medium transition-all duration-300 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                       aria-label="Delete all bookmarks from this book"
                     >
                       Delete All
@@ -164,7 +164,7 @@ function BookmarksView() {
                   </div>
 
                   {/* Quotes */}
-                  <div className="p-6 space-y-4">
+                  <div className="p-6 space-y-8">
                     {bookData.quotes.map((bookmark, index) => (
                       <div
                         key={bookmark.key}
@@ -174,7 +174,7 @@ function BookmarksView() {
                           {/* Theme badge */}
                           {bookmark.theme && (
                             <div className="flex-shrink-0">
-                              <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 leading-normal">
                                 {bookmark.theme}
                               </span>
                             </div>
@@ -188,7 +188,7 @@ function BookmarksView() {
                           {/* Delete button */}
                           <button
                             onClick={() => handleDeleteBookmark(bookmark.key)}
-                            className="flex-shrink-0 text-gray-500 hover:text-red-400 transition-colors p-1"
+                            className="px-3 py-1.5 flex-shrink-0 text-gray-500 hover:text-red-400 transition-colors"
                             aria-label="Delete bookmark"
                           >
                             <svg

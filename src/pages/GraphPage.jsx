@@ -175,10 +175,10 @@ function GraphPage() {
           >
             Book Network Graph
           </h1>
-          <div className="flex gap-4">
+          <div className="flex gap-5">
             <button
               onClick={() => navigate('/bookmarks')}
-              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-3"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
@@ -204,7 +204,7 @@ function GraphPage() {
             </button>
             <button
               onClick={() => navigate('/')}
-              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
@@ -231,7 +231,7 @@ function GraphPage() {
           {/* Mobile menu button */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden fixed top-20 left-4 z-50 p-2 rounded-lg transition-all duration-300"
+            className="md:hidden fixed top-20 left-4 z-50 px-3 py-1.5 rounded-lg transition-all duration-300"
             style={{ 
               backgroundColor: 'rgba(147, 51, 234, 0.8)',
               color: '#ffffff',
@@ -301,7 +301,7 @@ function GraphPage() {
             {(isNodeSelected || quotesPanelOpen) && (
               <button
                 onClick={handleReset}
-                className="absolute top-4 left-4 z-50 px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                className="absolute top-4 left-4 z-50 px-3 py-1.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-3"
                 style={{ 
                   backgroundColor: 'rgba(147, 51, 234, 0.9)',
                   color: '#ffffff',
@@ -343,13 +343,13 @@ function GraphPage() {
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center py-12">
-          <div className="text-center">
+          <div className="text-center space-y-8">
             <p className="text-lg mb-4 leading-relaxed" style={{ color: '#d1d5db' }}>
               No books found. Please upload books first.
             </p>
             <button
               onClick={() => navigate('/')}
-              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              className="px-3 py-1.5 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
               style={{ 
                 backgroundColor: '#9333ea',
                 color: '#ffffff',
