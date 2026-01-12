@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-function LoadingScreen({ bookCount = 0, onComplete }) {
+function LoadingScreen({ bookCount = 0, onComplete, analysisProgress = 0, isAnalyzing = false }) {
   const [dots, setDots] = useState('');
 
   useEffect(() => {
@@ -75,12 +75,34 @@ function LoadingScreen({ bookCount = 0, onComplete }) {
 
         {/* Progress text */}
         {bookCount > 0 && (
-          <p
-            className="text-xl md:text-2xl"
-            style={{ color: '#d1d5db' }}
-          >
-            Analyzing {bookCount} book{bookCount !== 1 ? 's' : ''}...
-          </p>
+          <div className="space-y-4">
+            <p
+              className="text-xl md:text-2xl"
+              style={{ color: '#d1d5db' }}
+            >
+              {isAnalyzing 
+                ? `Analyzing ${bookCount} book${bookCount !== 1 ? 's' : ''}...` 
+                : `Processing ${bookCount} book${bookCount !== 1 ? 's' : ''}...`}
+            </p>
+            
+            {/* Progress bar */}
+            {isAnalyzing && (
+              <div className="w-64 md:w-80 mx-auto">
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-600 transition-all duration-300"
+                    style={{
+                      width: `${analysisProgress}%`,
+                      boxShadow: '0 0 10px rgba(147, 51, 234, 0.6)'
+                    }}
+                  />
+                </div>
+                <p className="text-sm text-gray-400 mt-2">
+                  {analysisProgress}% complete
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Floating particles effect */}

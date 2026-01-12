@@ -6,6 +6,9 @@ import FilterSidebar from '../FilterSidebar';
 function GraphPage() {
   const [books, setBooks] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isNodeSelected, setIsNodeSelected] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [quotesPanelOpen, setQuotesPanelOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     all: true,
     topRated: false,
@@ -16,6 +19,23 @@ function GraphPage() {
   });
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleReset = () => {
+    setIsNodeSelected(false);
+    setSelectedBook(null);
+    setQuotesPanelOpen(false);
+    if (window.__bookGraphReset) {
+      window.__bookGraphReset();
+    }
+  };
+
+  // Expose functions for BookGraph to notify when node is selected (for backward compatibility)
+  useEffect(() => {
+    window.setIsNodeSelected = setIsNodeSelected;
+    return () => {
+      delete window.setIsNodeSelected;
+    };
+  }, []);
 
   // Load books from navigation state or localStorage on mount
   useEffect(() => {
@@ -155,25 +175,53 @@ function GraphPage() {
           >
             Book Network Graph
           </h1>
-          <button
-            onClick={() => navigate('/')}
-            className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
-            style={{ 
-              backgroundColor: '#9333ea',
-              color: '#ffffff',
-              boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
-              e.target.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
-              e.target.style.transform = 'translateY(0)';
-            }}
-          >
-            Back to Upload
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/bookmarks')}
+              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+              style={{ 
+                backgroundColor: '#9333ea',
+                color: '#ffffff',
+                boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Bookmarks
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="px-8 py-4 mt-4 mb-4 rounded-lg font-semibold transition-all duration-300"
+              style={{ 
+                backgroundColor: '#9333ea',
+                color: '#ffffff',
+                boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              Back to Upload
+            </button>
+          </div>
         </div>
       </div>
 
@@ -248,10 +296,47 @@ function GraphPage() {
           </div>
 
           {/* Graph area */}
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-hidden flex flex-col relative">
+            {/* Reset/Back Button - shown when node is selected */}
+            {(isNodeSelected || quotesPanelOpen) && (
+              <button
+                onClick={handleReset}
+                className="absolute top-4 left-4 z-50 px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                style={{ 
+                  backgroundColor: 'rgba(147, 51, 234, 0.9)',
+                  color: '#ffffff',
+                  boxShadow: '0 0 20px rgba(147, 51, 234, 0.5)',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.boxShadow = '0 0 30px rgba(147, 51, 234, 0.7)';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.5)';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Reset View
+              </button>
+            )}
             <div className="flex-1 flex flex-col p-4 min-h-0">
               <div className="flex-1 min-h-0">
-                <BookGraph books={filteredBooks} />
+                <BookGraph 
+                  books={filteredBooks} 
+                  onReset={() => {
+                    setIsNodeSelected(false);
+                    setSelectedBook(null);
+                    setQuotesPanelOpen(false);
+                  }}
+                  onBookUpdate={(updatedBooks) => {
+                    // Update books state when a book is analyzed
+                    setBooks(updatedBooks);
+                  }}
+                />
               </div>
             </div>
           </div>

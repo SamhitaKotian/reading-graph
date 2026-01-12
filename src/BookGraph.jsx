@@ -1,10 +1,17 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { analyzeBook } from './geminiAPI';
+import QuotesPanel from './components/QuotesPanel';
 
-function BookGraph({ books = [] }) {
+function BookGraph({ books = [], onReset, onBookUpdate }) {
   const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef(null);
+  const graphRef = useRef(null);
   const [pulsePhase, setPulsePhase] = useState(0);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [relatedNodeIds, setRelatedNodeIds] = useState(new Set());
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [graphWidth, setGraphWidth] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth - 300; // Account for sidebar width
@@ -61,52 +68,214 @@ function BookGraph({ books = [] }) {
     };
 
     // Create nodes from books
-    const nodes = books.map((book, index) => ({
-      id: book.id || `book-${index}`,
-      name: book.title || 'Untitled',
-      title: book.title || 'Untitled',
-      val: 6, // Node size
-      rating: book.rating || 'Not rated',
-      author: book.author || 'Unknown',
-      dateRead: book.dateRead || null,
-      isRecent: isRecentlyRead(book.dateRead),
-    }));
+    const nodes = books.map((book, index) => {
+      const nodeId = book.id || `book-${index}`;
+      const isRelated = selectedNode ? relatedNodeIds.has(nodeId) : true;
+      const isSelected = selectedNode && nodeId === selectedNode.id;
+      
+      return {
+        id: nodeId,
+        name: book.title || 'Untitled',
+        title: book.title || 'Untitled',
+        val: 6, // Node size
+        rating: book.rating || 'Not rated',
+        author: book.author || 'Unknown',
+        dateRead: book.dateRead || null,
+        isRecent: isRecentlyRead(book.dateRead),
+        themes: book.themes || [],
+        isRelated,
+        isSelected,
+        opacity: selectedNode ? (isRelated || isSelected ? 1 : 0.2) : 1,
+      };
+    });
 
-    // Generate random links between books (we'll make them real later)
+    // Generate theme-based links between books
     const links = [];
     
-    // Only create links if there are at least 2 books
+    // Theme colors mapping
+    const themeColors = {
+      'Identity & Self': '#9370DB',
+      'Emotional Health': '#87CEEB',
+      'Love & Relationships': '#FF1493',
+      'Power & Strategy': '#8B0000',
+      'Existentialism': '#00CED1',
+      'Science & Universe': '#4169E1',
+      'War & Conflict': '#DC143C',
+      'Time & Memory': '#FF69B4',
+      'Morality & Ethics': '#32CD32',
+      'Human Nature': '#FFA500',
+      'Dystopia': '#696969',
+    };
+
+    // Create links based on shared themes
     if (nodes.length >= 2) {
-      const numLinks = Math.min(Math.floor(books.length * 1.5), Math.max(1, books.length - 1));
-      
-      for (let i = 0; i < numLinks; i++) {
-        const sourceIndex = Math.floor(Math.random() * books.length);
-        let targetIndex = Math.floor(Math.random() * books.length);
-        
-        // Make sure source and target are different
-        while (targetIndex === sourceIndex && nodes.length > 1) {
-          targetIndex = Math.floor(Math.random() * books.length);
-        }
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const node1 = nodes[i];
+          const node2 = nodes[j];
+          const book1 = books.find(b => (b.id || `book-${i}`) === node1.id);
+          const book2 = books.find(b => (b.id || `book-${j}`) === node2.id);
 
-        // Check if link already exists (avoid duplicates)
-        const linkExists = links.some(
-          link =>
-            (link.source === nodes[sourceIndex].id && link.target === nodes[targetIndex].id) ||
-            (link.source === nodes[targetIndex].id && link.target === nodes[sourceIndex].id)
-        );
+          if (!book1 || !book2) continue;
 
-        if (!linkExists && sourceIndex !== targetIndex) {
-          links.push({
-            source: nodes[sourceIndex].id,
-            target: nodes[targetIndex].id,
-            strength: Math.random() * 0.4 + 0.6, // Random strength between 0.6 and 1.0
-          });
+          const themes1 = (book1.themes || []).map(t => typeof t === 'string' ? t : t.theme);
+          const themes2 = (book2.themes || []).map(t => typeof t === 'string' ? t : t.theme);
+
+          // Find shared themes
+          const sharedThemes = themes1.filter(t => themes2.includes(t));
+
+          if (sharedThemes.length > 0) {
+            // Use the first shared theme for the link
+            const linkTheme = sharedThemes[0];
+            const isVisible = selectedNode 
+              ? (relatedNodeIds.has(node1.id) && relatedNodeIds.has(node2.id))
+              : true;
+            
+            links.push({
+              source: node1.id,
+              target: node2.id,
+              theme: linkTheme,
+              strength: 0.7 + (sharedThemes.length * 0.1), // Higher strength for more shared themes
+              color: themeColors[linkTheme] || '#00CED1',
+              isVisible,
+            });
+          }
         }
       }
     }
 
     return { nodes, links };
-  }, [books]);
+  }, [books, selectedNode, relatedNodeIds]);
+
+  // Helper function to update book in books array
+  const updateBookInState = (bookToUpdate, updatedData) => {
+    const updatedBooks = books.map(book => {
+      // Match by id if available, otherwise by title and author
+      const matchesById = bookToUpdate.id && book.id && bookToUpdate.id === book.id;
+      const matchesByTitleAuthor = bookToUpdate.title === book.title && 
+                                   bookToUpdate.author === book.author;
+      
+      if (matchesById || matchesByTitleAuthor) {
+        return { ...book, ...updatedData };
+      }
+      return book;
+    });
+    
+    // Update localStorage
+    localStorage.setItem('readingGraphBooks', JSON.stringify(updatedBooks));
+    
+    // Notify parent component to update books
+    if (onBookUpdate) {
+      onBookUpdate(updatedBooks);
+    }
+  };
+
+  // Handle node click
+  const handleNodeClick = async (node) => {
+    if (selectedNode && selectedNode.id === node.id) {
+      // Clicking the same node resets
+      handleReset();
+      return;
+    }
+
+    setSelectedNode(node);
+    
+    // Find book data
+    const book = books.find(b => {
+      const bookId = b.id || `book-${books.indexOf(b)}`;
+      return bookId === node.id;
+    });
+    
+    if (!book) return;
+
+    // Check if book has themes, if not analyze it
+    let bookToUse = book;
+    if (!book.themes || book.themes.length === 0) {
+      setIsAnalyzing(true);
+      try {
+        const analysisResult = await analyzeBook(book.title, book.author);
+        
+        // Prepare updated data
+        const updatedData = {
+          themes: analysisResult.themes || [],
+          quotes: analysisResult.themes?.flatMap(theme => theme.quotes || []) || []
+        };
+        
+        // Update book object
+        bookToUse = {
+          ...book,
+          ...updatedData
+        };
+        
+        // Update book in state
+        updateBookInState(book, updatedData);
+        
+        // Set selected book with updated data
+        setSelectedBook(bookToUse);
+      } catch (error) {
+        console.error('Error analyzing book:', error);
+        // Still set the book even if analysis fails
+        setSelectedBook(book);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    } else {
+      // Book already has themes, just set it
+      setSelectedBook(book);
+    }
+
+    // Find books that share themes with selected book
+    const selectedThemes = (bookToUse.themes || []).map(t => typeof t === 'string' ? t : t.theme);
+    const relatedIds = new Set([node.id]); // Include selected node itself
+
+    books.forEach((bookItem, index) => {
+      const bookId = bookItem.id || `book-${index}`;
+      if (bookId === node.id) return; // Skip selected book
+
+      const bookThemes = (bookItem.themes || []).map(t => typeof t === 'string' ? t : t.theme);
+      const hasSharedTheme = selectedThemes.some(t => bookThemes.includes(t));
+
+      if (hasSharedTheme) {
+        relatedIds.add(bookId);
+      }
+    });
+
+    setRelatedNodeIds(relatedIds);
+
+    // Zoom to selected node
+    setTimeout(() => {
+      if (graphRef.current && node.x !== undefined && node.y !== undefined) {
+        graphRef.current.centerAt(node.x, node.y, 800);
+        graphRef.current.zoom(3, 800);
+      }
+    }, 100);
+  };
+
+  // Reset view
+  const handleReset = () => {
+    setSelectedNode(null);
+    setRelatedNodeIds(new Set());
+    setSelectedBook(null);
+    if (graphRef.current) {
+      graphRef.current.zoomToFit(400, 50);
+    }
+    if (onReset) {
+      onReset();
+    }
+  };
+
+  // Expose reset function and notify parent when node is selected
+  useEffect(() => {
+    window.__bookGraphReset = handleReset;
+    if (onReset && selectedNode) {
+      // Notify parent that a node is selected
+      setTimeout(() => {
+        if (window.setIsNodeSelected) {
+          window.setIsNodeSelected(true);
+        }
+      }, 100);
+    }
+  }, [onReset, selectedNode, books]);
 
   // Animation loop for pulsing effect (throttled for better performance)
   useEffect(() => {
@@ -200,26 +369,56 @@ function BookGraph({ books = [] }) {
         </div>
       )}
       <ForceGraph2D
+        ref={graphRef}
         key={`graph-${books.length}`}
         graphData={graphData}
         nodeLabel={(node) => `${node.name}\nby ${node.author}\nRating: ${node.rating}`}
         nodeColor={getNodeColor}
         nodeVal={(node) => node.val || 6}
-        linkColor={(link) => `rgba(0, 255, 255, ${link.strength || 0.6})`}
-        linkWidth={1.5}
+        linkColor={(link) => {
+          if (!link.isVisible) return 'rgba(0, 0, 0, 0)'; // Hide non-visible links
+          const color = link.color || '#00CED1';
+          const opacity = link.strength || 0.6;
+          
+          // Convert hex to rgba if needed
+          if (color.startsWith('#')) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+          }
+          return color;
+        }}
+        linkWidth={(link) => link.isVisible ? 2 : 0}
         linkDirectionalArrowLength={6}
         linkDirectionalArrowRelPos={1}
         linkDirectionalParticles={3}
         linkDirectionalParticleWidth={3}
         linkDirectionalParticleSpeed={0.006}
-        linkDirectionalParticleColor={() => 'rgba(0, 255, 255, 1)'}
+        linkDirectionalParticleColor={(link) => {
+          if (!link.isVisible) return 'rgba(0, 0, 0, 0)';
+          return link.color || 'rgba(0, 255, 255, 1)';
+        }}
         linkCanvasObject={(link, ctx) => {
-          // Add cyan glow effect to links
+          if (!link.isVisible) return; // Don't draw hidden links
+          
+          const color = link.color || '#00CED1';
+          const opacity = link.strength || 0.6;
+          
+          // Convert hex to rgba if needed
+          let strokeColor = color;
+          if (color.startsWith('#')) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            strokeColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+          }
+          
           ctx.save();
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = 'rgba(0, 255, 255, 0.8)';
-          ctx.strokeStyle = `rgba(0, 255, 255, ${link.strength || 0.6})`;
-          ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = color;
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(link.source.x, link.source.y);
           ctx.lineTo(link.target.x, link.target.y);
@@ -236,6 +435,7 @@ function BookGraph({ books = [] }) {
         onNodeHover={(node) => {
           // Optional: Add hover effects
         }}
+        onNodeClick={handleNodeClick}
         nodePointerAreaPaint={(node, color, ctx) => {
           ctx.fillStyle = color;
           ctx.beginPath();
@@ -291,14 +491,22 @@ function BookGraph({ books = [] }) {
           
           // Main node circle (small dot)
           ctx.shadowBlur = 0;
+          ctx.globalAlpha = node.opacity || 1;
           ctx.beginPath();
           ctx.arc(node.x, node.y, currentRadius, 0, 2 * Math.PI, false);
           ctx.fillStyle = nodeColor;
           ctx.fill();
           
-          // Improved border
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.lineWidth = 2;
+          // Highlight selected node
+          if (node.isSelected) {
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#FFD700';
+          } else {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+          }
           ctx.stroke();
           
           ctx.restore();
@@ -338,6 +546,13 @@ function BookGraph({ books = [] }) {
           charge: { strength: -500 },
           link: { distance: 250 }
         }}
+      />
+      <QuotesPanel 
+        book={selectedBook} 
+        isOpen={!!selectedBook} 
+        isLoading={isAnalyzing} 
+        onClose={() => setSelectedBook(null)}
+        books={books}
       />
     </div>
   );

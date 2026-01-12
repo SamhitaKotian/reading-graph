@@ -1,12 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
+import { analyzeBook } from '../geminiAPI';
 
 function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [readBooks, setReadBooks] = useState(null);
   const [error, setError] = useState(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -121,17 +124,61 @@ function UploadPage() {
 
       // Store books for loading screen (shows book count)
       setReadBooks(filteredReadBooks);
+      setIsAnalyzing(true);
+      setAnalysisProgress(0);
 
-      // Simulate AI analysis time (2-3 seconds)
-      const analysisTime = 2000 + Math.random() * 1000; // 2-3 seconds
-      
+      // Analyze each book with Groq API
+      const analyzedBooks = [];
+      const totalBooks = filteredReadBooks.length;
+
+      for (let i = 0; i < filteredReadBooks.length; i++) {
+        const book = filteredReadBooks[i];
+        
+        try {
+          // Call analyzeBook API
+          const analysisResult = await analyzeBook(book.title, book.author);
+          
+          // Add themes and quotes to book object
+          const enrichedBook = {
+            ...book,
+            themes: analysisResult.themes || [],
+            quotes: analysisResult.themes?.flatMap(theme => theme.quotes || []) || []
+          };
+          
+          analyzedBooks.push(enrichedBook);
+        } catch (err) {
+          console.error(`Error analyzing book "${book.title}":`, err);
+          // Continue with book even if analysis fails
+          analyzedBooks.push({
+            ...book,
+            themes: [],
+            quotes: []
+          });
+        }
+
+        // Update progress after each book is processed
+        setAnalysisProgress(Math.floor(((i + 1) / totalBooks) * 100));
+
+        // Small delay to avoid rate limiting (except for last book)
+        if (i < filteredReadBooks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      // Ensure progress is 100% and stop analyzing
+      setAnalysisProgress(100);
+      setIsAnalyzing(false);
+
+      // Navigate to graph with analyzed books
       setTimeout(() => {
-        navigate('/graph', { state: { books: filteredReadBooks } });
-      }, analysisTime);
+        navigate('/graph', { state: { books: analyzedBooks } });
+      }, 500);
 
     } catch (err) {
       setError(err.message || 'Error parsing CSV file');
       setIsLoading(false);
+      setIsAnalyzing(false);
+      setAnalysisProgress(0);
       setReadBooks(null);
     }
   };
@@ -193,15 +240,51 @@ function UploadPage() {
     <>
       {/* Loading Screen Overlay */}
       {isLoading && readBooks && (
-        <LoadingScreen bookCount={readBooks.length} />
+        <LoadingScreen 
+          bookCount={readBooks.length} 
+          analysisProgress={analysisProgress}
+          isAnalyzing={isAnalyzing}
+        />
       )}
 
       <div 
-        className="min-h-screen bg-[#0a0e27] flex items-center justify-center p-4 md:p-8 relative overflow-hidden"
+        className="min-h-screen bg-[#0a0e27] flex flex-col relative overflow-hidden"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        {/* Navigation Bar */}
+        <div className="border-b px-6 py-4 md:px-8 md:py-6" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+          <div className="container mx-auto flex items-center justify-end">
+            <button
+              onClick={() => navigate('/bookmarks')}
+              className="px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+              style={{ 
+                backgroundColor: '#9333ea',
+                color: '#ffffff',
+                boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.6)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.boxShadow = '0 0 15px rgba(147, 51, 234, 0.4)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Bookmarks
+            </button>
+          </div>
+        </div>
+
         {/* Gradient Overlay */}
         <div 
           className="absolute inset-0 pointer-events-none"
@@ -232,8 +315,10 @@ function UploadPage() {
           ))}
         </div>
 
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
         {/* MAIN CONTENT WRAPPER */}
-        <div className="w-full max-w-6xl mx-auto space-y-20 md:space-y-28 relative z-10">
+        <div className="w-full max-w-6xl mx-auto space-y-20 md:space-y-28">
           
           {/* Icon */}
           <div className="flex justify-center">
@@ -448,6 +533,7 @@ function UploadPage() {
             </div>
           )}
 
+        </div>
         </div>
 
         {/* CSS Animations */}
