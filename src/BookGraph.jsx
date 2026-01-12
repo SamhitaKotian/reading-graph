@@ -9,6 +9,7 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
   const graphRef = useRef(null);
   const [pulsePhase, setPulsePhase] = useState(0);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [hoveredNode, setHoveredNode] = useState(null);
   const [relatedNodeIds, setRelatedNodeIds] = useState(new Set());
   const [selectedBook, setSelectedBook] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -90,8 +91,9 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
       };
     });
 
-    // Generate theme-based links between books
+    // Generate theme-based links between books (branching network with strongest connections)
     const links = [];
+    const connected = new Set();
     
     // Theme colors mapping
     const themeColors = {
@@ -108,42 +110,70 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
       'Dystopia': '#696969',
     };
 
-    // Create links based on shared themes
-    if (nodes.length >= 2) {
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const node1 = nodes[i];
-          const node2 = nodes[j];
-          const book1 = books.find(b => (b.id || `book-${i}`) === node1.id);
-          const book2 = books.find(b => (b.id || `book-${j}`) === node2.id);
-
-          if (!book1 || !book2) continue;
-
-          const themes1 = (book1.themes || []).map(t => typeof t === 'string' ? t : t.theme);
-          const themes2 = (book2.themes || []).map(t => typeof t === 'string' ? t : t.theme);
-
-          // Find shared themes
+    // Calculate similarity scores and create links to top 2-3 most similar books
+    if (books.length >= 2) {
+      books.forEach((book, bookIndex) => {
+        const bookId = book.id || `book-${bookIndex}`;
+        const themes1 = (book.themes || []).map(t => typeof t === 'string' ? t : t.theme);
+        
+        // Calculate similarity scores for all other books
+        const similarities = [];
+        
+        books.forEach((other, otherIndex) => {
+          const otherId = other.id || `book-${otherIndex}`;
+          
+          if (bookId === otherId) return; // Skip self
+          
+          const themes2 = (other.themes || []).map(t => typeof t === 'string' ? t : t.theme);
+          
+          // Calculate similarity: number of shared themes
           const sharedThemes = themes1.filter(t => themes2.includes(t));
-
+          
           if (sharedThemes.length > 0) {
-            // Use the first shared theme for the link
-            const linkTheme = sharedThemes[0];
-            const isVisible = selectedNode 
-              ? (relatedNodeIds.has(node1.id) && relatedNodeIds.has(node2.id))
-              : true;
+            // Similarity score: number of shared themes (higher = more similar)
+            const similarityScore = sharedThemes.length;
             
-            links.push({
-              source: node1.id,
-              target: node2.id,
-              theme: linkTheme,
-              strength: 0.7 + (sharedThemes.length * 0.1), // Higher strength for more shared themes
-              color: themeColors[linkTheme] || '#00CED1',
-              isVisible,
-              opacity: isVisible ? 1 : 0, // For fade transitions
+            similarities.push({
+              otherId,
+              other,
+              sharedThemes,
+              similarityScore,
             });
           }
-        }
-      }
+        });
+        
+        // Sort by similarity score (highest first)
+        similarities.sort((a, b) => b.similarityScore - a.similarityScore);
+        
+        // Pick top 2-3 most similar books (randomly choose 2 or 3 for variety)
+        const maxConnections = Math.min(2 + Math.floor(Math.random() * 2), similarities.length); // 2 or 3
+        const topMatches = similarities.slice(0, maxConnections);
+        
+        // Create links to top matches
+        topMatches.forEach((match) => {
+          const linkKey = [bookId, match.otherId].sort().join('-');
+          
+          // Avoid duplicate links (bidirectional)
+          if (connected.has(linkKey)) return;
+          
+          const linkTheme = match.sharedThemes[0];
+          const isVisible = selectedNode 
+            ? (relatedNodeIds.has(bookId) && relatedNodeIds.has(match.otherId))
+            : true;
+          
+          links.push({
+            source: bookId,
+            target: match.otherId,
+            theme: linkTheme,
+            strength: 0.7 + (match.similarityScore * 0.1),
+            color: themeColors[linkTheme] || '#00CED1',
+            isVisible,
+            opacity: isVisible ? 1 : 0,
+          });
+          
+          connected.add(linkKey);
+        });
+      });
     }
 
     return { nodes, links };
@@ -336,6 +366,22 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
     }
   };
 
+  // Get glow color based on rating
+  const getNodeGlow = (rating) => {
+    // Handle different rating formats (e.g., "5", "5 stars", "5.0")
+    const ratingNum = parseFloat(rating?.toString().replace(/[^0-9.]/g, '')) || 0;
+    const roundedRating = Math.round(ratingNum);
+    
+    const glows = {
+      5: '#FFD700', // Gold
+      4: '#4A90E2', // Blue  
+      3: '#50C878', // Green
+      2: '#FF6B6B', // Coral
+      1: '#9B59B6'  // Purple
+    };
+    return glows[roundedRating] || '#00ffff';
+  };
+
   if (!books || books.length === 0) {
     return (
       <div 
@@ -357,7 +403,11 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
     <div 
       ref={containerRef}
       className="w-full h-full rounded-lg overflow-hidden shadow-2xl relative" 
-      style={{ backgroundColor: '#0a0e27', minHeight: '600px', height: '100%' }}
+      style={{ 
+        background: 'linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0a0e27 100%)',
+        minHeight: '600px', 
+        height: '100%' 
+      }}
     >
       {isLoading && (
         <div 
@@ -374,69 +424,53 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
         ref={graphRef}
         key={`graph-${books.length}`}
         graphData={graphData}
+        enableNodeDrag={true}
         nodeLabel={(node) => `${node.name}\nby ${node.author}\nRating: ${node.rating}`}
         nodeColor={getNodeColor}
-        nodeVal={(node) => node.val || 6}
-        linkColor={(link) => {
-          if (!link.isVisible) return 'rgba(0, 0, 0, 0)'; // Hide non-visible links
-          const color = link.color || '#00CED1';
-          const opacity = (link.strength || 0.6) * (link.opacity || 1); // Apply opacity transition
-          
-          // Convert hex to rgba if needed
-          if (color.startsWith('#')) {
-            const r = parseInt(color.slice(1, 3), 16);
-            const g = parseInt(color.slice(3, 5), 16);
-            const b = parseInt(color.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-          }
-          return color;
-        }}
-        linkWidth={(link) => link.isVisible ? 2 : 0}
+        nodeVal={(node) => 4}
+        linkColor={() => '#00ffff'}
+        linkWidth={0.8}
         linkDirectionalArrowLength={6}
         linkDirectionalArrowRelPos={1}
-        linkDirectionalParticles={3}
-        linkDirectionalParticleWidth={3}
-        linkDirectionalParticleSpeed={0.006}
-        linkDirectionalParticleColor={(link) => {
-          if (!link.isVisible) return 'rgba(0, 0, 0, 0)';
-          return link.color || 'rgba(0, 255, 255, 1)';
-        }}
-        linkCanvasObject={(link, ctx) => {
-          if (!link.isVisible) return; // Don't draw hidden links
-          
-          const color = link.color || '#00CED1';
-          const opacity = link.strength || 0.6;
-          
-          // Convert hex to rgba if needed
-          let strokeColor = color;
-          if (color.startsWith('#')) {
-            const r = parseInt(color.slice(1, 3), 16);
-            const g = parseInt(color.slice(3, 5), 16);
-            const b = parseInt(color.slice(5, 7), 16);
-            strokeColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-          }
-          
-          ctx.save();
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = color;
-          ctx.strokeStyle = strokeColor;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(link.source.x, link.source.y);
-          ctx.lineTo(link.target.x, link.target.y);
-          ctx.stroke();
-          ctx.restore();
-        }}
+        linkDirectionalParticles={1}
+        linkDirectionalParticleWidth={1.5}
+        linkDirectionalParticleSpeed={0.003}
+        linkDirectionalParticleColor={() => 'rgba(0,255,255,0.5)'}
         linkCanvasObjectMode={() => 'replace'}
-        cooldownTicks={400}
-        warmupTicks={150}
+        linkCanvasObject={(link, ctx, globalScale) => {
+          const start = link.source;
+          const end = link.target;
+          
+          // Outer glow (subtle)
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+          ctx.lineWidth = 3 / globalScale;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#00ffff';
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(end.x, end.y);
+          ctx.stroke();
+          
+          // Core line (bright, thin)
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+          ctx.lineWidth = 0.8 / globalScale;
+          ctx.shadowBlur = 5;
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(end.x, end.y);
+          ctx.stroke();
+          
+          ctx.shadowBlur = 0;
+        }}
+        cooldownTicks={200}
+        warmupTicks={100}
         linkOpacity={0.6}
         onEngineStop={() => {
           // Graph has finished initializing
           setIsLoading(false);
         }}
         onNodeHover={(node) => {
-          // Optional: Add hover effects
+          setHoveredNode(node);
         }}
         onNodeClick={handleNodeClick}
         nodePointerAreaPaint={(node, color, ctx) => {
@@ -445,125 +479,65 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
           ctx.arc(node.x, node.y, 8, 0, 2 * Math.PI);
           ctx.fill();
         }}
+        nodeCanvasObjectMode={() => 'replace'}
         nodeCanvasObject={(node, ctx, globalScale) => {
           // Safety check: ensure node has valid position
           if (typeof node.x !== 'number' || typeof node.y !== 'number' || isNaN(node.x) || isNaN(node.y)) {
             return;
           }
           
-          // Truncate long titles
-          const label = node.name && node.name.length > 20 
-            ? node.name.substring(0, 20) + '...' 
-            : (node.name || 'Untitled');
-          const fontSize = 10 / Math.sqrt(globalScale);
+          const baseSize = 8;
           const nodeColor = getNodeColor(node);
+          const glowColor = getNodeGlow(node.rating);
           
-          // Use fixed small radius
-          const radius = 5;
+          // Pulsing animation (subtle breathing effect)
+          const pulseScale = 1 + Math.sin(pulsePhase) * 0.1;
+          const size = baseSize * pulseScale;
           
-          // Calculate pulse scale for recently read books
-          const pulseScale = node.isRecent 
-            ? 1 + Math.sin(pulsePhase) * 0.15 
-            : 1;
-          const currentRadius = radius * pulseScale;
+          // Glow intensity multiplier (increased on hover)
+          const isHovered = hoveredNode && hoveredNode.id === node.id;
+          const glowMultiplier = isHovered ? 2 : 1;
           
-          ctx.save();
+          // Outer glow (large, soft) - enhanced on hover
+          ctx.shadowBlur = 25 * glowMultiplier;
+          ctx.shadowColor = glowColor;
+          ctx.fillStyle = nodeColor;
+          ctx.globalAlpha = 0.3 * (isHovered ? 1.5 : 1);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size + 4, 0, 2 * Math.PI);
+          ctx.fill();
           
-          // Outer glow layer (largest) - reduced spread
+          // Inner glow (medium) - enhanced on hover
+          ctx.shadowBlur = 15 * glowMultiplier;
+          ctx.shadowColor = glowColor;
+          ctx.globalAlpha = 0.6 * (isHovered ? 1.3 : 1);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size + 2, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Core (bright solid) - enhanced on hover
+          ctx.shadowBlur = 8 * glowMultiplier;
+          ctx.shadowColor = glowColor;
           ctx.globalAlpha = 1;
-          ctx.shadowBlur = 25;
-          ctx.shadowColor = nodeColor;
           ctx.beginPath();
-          ctx.arc(node.x, node.y, currentRadius * 2, 0, 2 * Math.PI, false);
-          ctx.fillStyle = nodeColor;
+          ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
           ctx.fill();
           
-          // Middle glow layer - reduced spread
-          ctx.shadowBlur = 15;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, currentRadius * 1.5, 0, 2 * Math.PI, false);
-          ctx.fillStyle = nodeColor;
-          ctx.fill();
-          
-          // Inner bright circle - reduced spread
-          ctx.shadowBlur = 8;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, currentRadius * 1.2, 0, 2 * Math.PI, false);
-          ctx.fillStyle = nodeColor;
-          ctx.fill();
-          
-          // Main node circle (small dot)
           ctx.shadowBlur = 0;
-          ctx.globalAlpha = node.opacity || 1;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, currentRadius, 0, 2 * Math.PI, false);
-          ctx.fillStyle = nodeColor;
-          ctx.fill();
-          
-          // Pulse effect for selected node
-          if (node.isSelected) {
-            const pulseScale = 1 + Math.sin(pulsePhase * 2) * 0.2; // Faster pulse for selected
-            const pulseRadius = currentRadius * pulseScale;
-            
-            // Pulsing outer ring
-            ctx.save();
-            ctx.globalAlpha = 0.3 * (1 + Math.sin(pulsePhase * 2)) / 2;
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, pulseRadius * 1.5, 0, 2 * Math.PI, false);
-            ctx.stroke();
-            ctx.restore();
-            
-            // Highlight selected node
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#FFD700';
-          } else {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.lineWidth = 2;
-          }
-          ctx.stroke();
-          
-          ctx.restore();
-
-          // Draw label below node (only when zoomed in)
-          if (globalScale > 1.2) {
-            // Calculate fade-in opacity based on zoom level
-            const opacity = Math.min((globalScale - 1) / 2, 1);
-            
-            ctx.save();
-            ctx.font = `${fontSize}px 'Inter', -apple-system, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            
-            // Add text shadow for better readability
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-            
-            // Apply fade-in opacity
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.fillText(label, node.x, node.y + currentRadius + 4);
-            
-            ctx.restore();
-          }
+          ctx.globalAlpha = 1;
         }}
-        nodeCanvasObjectMode={() => 'replace'}
-        backgroundColor="#0a0e27"
+        backgroundColor="rgba(10, 14, 39, 1)"
         width={graphWidth}
         height={graphHeight || 800}
         nodeRelSize={4}
-        nodeRepulsion={-500}
-        linkDistance={250}
-        d3AlphaDecay={0.005}
+        nodeRepulsion={-400}
+        linkDistance={120}
+        d3AlphaDecay={0.02}
         d3AlphaMin={0.001}
-        d3VelocityDecay={0.15}
+        d3VelocityDecay={0.3}
         d3Force={{
           charge: { strength: -500 },
-          link: { distance: 250 }
+          link: { distance: 120 }
         }}
       />
       <QuotesPanel 
