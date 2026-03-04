@@ -141,8 +141,22 @@ function extractJSON(text) {
   } else if (jsonText.startsWith('```')) {
     jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
   }
-  
-  return jsonText;
+
+  // If the response includes extra text, try to extract the JSON portion
+  const firstBraceIndex = jsonText.search(/[\[{]/);
+  if (firstBraceIndex > 0) {
+    jsonText = jsonText.slice(firstBraceIndex);
+  }
+
+  // Trim anything after the last closing brace/bracket
+  const lastCurlyIndex = jsonText.lastIndexOf('}');
+  const lastBracketIndex = jsonText.lastIndexOf(']');
+  const lastClosingIndex = Math.max(lastCurlyIndex, lastBracketIndex);
+  if (lastClosingIndex !== -1 && lastClosingIndex < jsonText.length - 1) {
+    jsonText = jsonText.slice(0, lastClosingIndex + 1);
+  }
+
+  return jsonText.trim();
 }
 
 /**

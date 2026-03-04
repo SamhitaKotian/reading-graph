@@ -68,7 +68,7 @@ function BookmarksView() {
           >
             Bookmarked Quotes
           </h1>
-          <div className="flex flex-wrap gap-3 md:gap-5">
+          <div className="flex flex-wrap gap-3 md:gap-5 w-full md:w-auto md:justify-end ml-auto">
             <button
               onClick={() => navigate('/graph')}
               className="min-h-[44px] px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm md:text-base"

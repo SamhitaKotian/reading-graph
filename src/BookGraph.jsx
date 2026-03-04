@@ -13,6 +13,9 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
   const [relatedNodeIds, setRelatedNodeIds] = useState(new Set());
   const [selectedBook, setSelectedBook] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const isFillingThemesRef = useRef(false);
+  const analysisAttemptsRef = useRef(new Map());
+  const inFlightAnalysisRef = useRef(new Set());
   const [graphWidth, setGraphWidth] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth - 300; // Account for sidebar width
@@ -282,6 +285,63 @@ function BookGraph({ books = [], onReset, onBookUpdate }) {
       }
     }, 100);
   };
+
+  // Ensure all books have themes by filling missing ones in background
+  useEffect(() => {
+    if (!books || books.length === 0 || isFillingThemesRef.current) return;
+
+    const missingThemes = books.filter((book) => !book.themes || book.themes.length === 0);
+    if (missingThemes.length === 0) return;
+
+    isFillingThemesRef.current = true;
+    let cancelled = false;
+
+    const fillThemes = async () => {
+      for (const book of missingThemes) {
+        if (cancelled) break;
+
+        const bookId = book.id || `${book.title}-${book.author}`;
+        const attempts = analysisAttemptsRef.current.get(bookId) || 0;
+
+        if (attempts >= 2 || inFlightAnalysisRef.current.has(bookId)) {
+          continue;
+        }
+
+        inFlightAnalysisRef.current.add(bookId);
+        analysisAttemptsRef.current.set(bookId, attempts + 1);
+
+        try {
+          const analysisResult = await analyzeBook(book.title, book.author);
+          const updatedData = {
+            themes: analysisResult.themes || [],
+            quotes: analysisResult.themes?.flatMap(theme => theme.quotes || []) || []
+          };
+
+          updateBookInState(book, updatedData);
+        } catch (error) {
+          console.error('Error backfilling book themes:', error);
+        } finally {
+          inFlightAnalysisRef.current.delete(bookId);
+        }
+
+        if (cancelled) break;
+
+        // Small delay to reduce rate limiting
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+    };
+
+    fillThemes().finally(() => {
+      if (!cancelled) {
+        isFillingThemesRef.current = false;
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      isFillingThemesRef.current = false;
+    };
+  }, [books]);
 
   // Reset view with smooth transition
   const handleReset = () => {
