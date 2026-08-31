@@ -223,67 +223,62 @@ export async function generateInsights(bookTitle, bookAuthor, books = []) {
       .map(book => book.title.trim());
 
     const readTitleSet = new Set(readBookTitles.map(t => t.toLowerCase()));
-    const maxTitlesInPrompt = 40;
-    const titlesForPrompt = readBookTitles.slice(0, maxTitlesInPrompt);
-    const remainingCount = Math.max(0, readBookTitles.length - titlesForPrompt.length);
+    const seenSuggestions = new Set();
 
-    const readBooksList = readBookTitles.length > 0
-      ? `${titlesForPrompt.join(', ')}${remainingCount > 0 ? ` (and ${remainingCount} more)` : ''}`
-      : 'No books read yet';
+    const buildPrompt = (excludeTitles = []) => {
+      const excludeLine = excludeTitles.length > 0
+        ? `\nDo NOT suggest these titles: ${excludeTitles.slice(0, 8).join(', ')}`
+        : '';
 
-    // Build the prompt
-    const prompt = `Analyze "${bookTitle}" by ${bookAuthor}.
-
-User has already read ${readBookTitles.length} books, including: ${readBooksList}
-
-Suggest 5 books similar to "${bookTitle}" that are:
-- NOT in the user's library
-- Similar themes/style
-- Highly rated
-- Different authors preferred
+      return `Suggest 8 books similar to "${bookTitle}" by ${bookAuthor}.
+Similar themes/style, highly rated, different authors preferred.${excludeLine}
 
 Return ONLY valid JSON in this format (array of book objects):
 [
-  {
-    "title": "Book title",
-    "author": "Author name"
-  },
-  {
-    "title": "Book title",
-    "author": "Author name"
-  }
+  {"title": "Book title", "author": "Author name"}
 ]
 
-Important: 
-- Return exactly 5 book suggestions
-- Do NOT suggest any books the user has already read
+Important:
+- Return exactly 8 book suggestions
 - Focus on books with similar themes and style
 - Prefer different authors when possible`;
+    };
 
-    // Call Groq API
-    const responseText = await callGroqAPI(prompt);
-    
-    // Extract and parse JSON
-    const jsonText = extractJSON(responseText);
-    const parsed = JSON.parse(jsonText);
+    const parseSuggestions = (responseText) => {
+      const jsonText = extractJSON(responseText);
+      const parsed = JSON.parse(jsonText);
 
-    // Validate response structure - should be an array
-    if (!Array.isArray(parsed)) {
-      throw new Error('Invalid response format: expected array of book suggestions');
+      if (!Array.isArray(parsed)) {
+        throw new Error('Invalid response format: expected array of book suggestions');
+      }
+
+      return parsed.filter(book => {
+        if (!book?.title || !book?.author) return false;
+
+        const normalizedTitle = book.title.trim().toLowerCase();
+        if (readTitleSet.has(normalizedTitle) || seenSuggestions.has(normalizedTitle)) {
+          return false;
+        }
+
+        seenSuggestions.add(normalizedTitle);
+        return true;
+      });
+    };
+
+    let validSuggestions = [];
+
+    for (let attempt = 0; attempt < 2 && validSuggestions.length < 5; attempt++) {
+      const excludeTitles = validSuggestions.map(book => book.title);
+      const responseText = await callGroqAPI(buildPrompt(excludeTitles));
+      validSuggestions = [...validSuggestions, ...parseSuggestions(responseText)];
     }
-
-    // Validate each suggestion has title and author; exclude already-read books
-    const validSuggestions = parsed.filter(book => 
-      book && book.title && book.author &&
-      !readTitleSet.has(book.title.trim().toLowerCase())
-    );
 
     if (validSuggestions.length === 0) {
       throw new Error('No valid book suggestions returned');
     }
 
     return {
-      suggestions: validSuggestions.slice(0, 5) // Ensure max 5 suggestions
+      suggestions: validSuggestions.slice(0, 5)
     };
   } catch (error) {
     console.error('Error generating insights with Groq API:', error);
