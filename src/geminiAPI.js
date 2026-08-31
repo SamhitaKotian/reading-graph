@@ -218,22 +218,26 @@ Return ONLY valid JSON in this format:
  */
 export async function generateInsights(bookTitle, bookAuthor, books = []) {
   try {
-    // Extract all read book titles from the books array
     const readBookTitles = books
       .filter(book => book.title && book.title.trim() !== '')
       .map(book => book.title.trim());
-    
+
+    const readTitleSet = new Set(readBookTitles.map(t => t.toLowerCase()));
+    const maxTitlesInPrompt = 40;
+    const titlesForPrompt = readBookTitles.slice(0, maxTitlesInPrompt);
+    const remainingCount = Math.max(0, readBookTitles.length - titlesForPrompt.length);
+
     const readBooksList = readBookTitles.length > 0
-      ? readBookTitles.join(', ')
+      ? `${titlesForPrompt.join(', ')}${remainingCount > 0 ? ` (and ${remainingCount} more)` : ''}`
       : 'No books read yet';
 
     // Build the prompt
     const prompt = `Analyze "${bookTitle}" by ${bookAuthor}.
 
-User has already read: ${readBooksList}
+User has already read ${readBookTitles.length} books, including: ${readBooksList}
 
 Suggest 5 books similar to "${bookTitle}" that are:
-- NOT in the list above
+- NOT in the user's library
 - Similar themes/style
 - Highly rated
 - Different authors preferred
@@ -252,7 +256,7 @@ Return ONLY valid JSON in this format (array of book objects):
 
 Important: 
 - Return exactly 5 book suggestions
-- Do NOT suggest any books from the "already read" list
+- Do NOT suggest any books the user has already read
 - Focus on books with similar themes and style
 - Prefer different authors when possible`;
 
@@ -268,9 +272,10 @@ Important:
       throw new Error('Invalid response format: expected array of book suggestions');
     }
 
-    // Validate each suggestion has title and author
+    // Validate each suggestion has title and author; exclude already-read books
     const validSuggestions = parsed.filter(book => 
-      book && book.title && book.author
+      book && book.title && book.author &&
+      !readTitleSet.has(book.title.trim().toLowerCase())
     );
 
     if (validSuggestions.length === 0) {
