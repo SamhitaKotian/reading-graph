@@ -1,7 +1,7 @@
 const API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const PRIMARY_MODEL = 'llama-3.3-70b-versatile';
-const FALLBACK_MODEL = 'llama-3.1-8b-instant';
+const PRIMARY_MODEL = 'openai/gpt-oss-20b';
+const FALLBACK_MODEL = 'groq/compound-mini';
 
 /**
  * Call Groq API with retry logic and model fallback
